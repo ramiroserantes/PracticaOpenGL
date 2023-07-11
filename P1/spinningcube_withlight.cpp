@@ -6,8 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <stdio.h>
 
-// GLM library to deal with matrix operations
-#include <glm/glm.hpp>
+// GLM library to deal with matrix operations <glm/glm.hpp>
 #include <glm/mat4x4.hpp> // glm::mat4
 #include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::perspective
 #include <glm/gtc/type_ptr.hpp>
@@ -25,13 +24,16 @@ GLuint shader_program = 0; // shader program to set render pipeline
 GLuint vao = 0; // Vertex Array Object to set input data
 GLint model_location, view_location, proj_location; // Uniforms for transformation matrices
 
+// Parte 1: Creación de variables necesarias.
+
 // Posiciones para la luz y la vista
 GLint light_pos_location, view_pos_location; 
+
 // Creación de las variables de ambiente, difusa y especular para la luz
 GLint light_ambient_location, light_diffuse_location, light_specular_location; 
-// Creación de las variables de ambiente, difusa, especular y brillo para el material
-GLint material_ambient_location, material_diffuse_location, material_specular_location, material_shininess_location; 
 
+// Creación de las variables de ambiente, difusa, especular y brillo para el material
+GLint material_diffuse_location, material_specular_location, material_ambient_location, material_shininess_location; 
 
 GLint normal_to_world_location;
 
@@ -161,6 +163,7 @@ int main() {
   // far ---> 1        2
   //       6        5
   //
+  // Parte 2 incluír la normal de los vértices.
   const GLfloat vertex_positions[] = {
     -0.25f, -0.25f, -0.25f, 0.00f, 0.00f, -1.00f, // 1
     -0.25f,  0.25f, -0.25f, 0.00f, 0.00f, -1.00f, // 0
@@ -217,6 +220,7 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_positions), vertex_positions, GL_STATIC_DRAW);
 
+  // Incluír las normales en la representación.
   // Vertex attributes
   // 0: vertex position (x, y, z)
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), NULL);
@@ -224,7 +228,7 @@ int main() {
 
   // Vertex attributes
   // 1: vertex normals (x, y, z)
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) (3 *sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
   // Unbind vbo (it was conveniently registered by VertexAttribPointer)
@@ -233,6 +237,7 @@ int main() {
   // Unbind vao
   glBindVertexArray(0);
 
+  // Parte 3 Especificar las variables.
   // Uniforms
   // - Model matrix
   // - View matrix
@@ -241,15 +246,14 @@ int main() {
   // - Camera position
   // - Light data
   // - Material data
-  // parte 3
   model_location = glGetUniformLocation(shader_program, "model");
   view_location = glGetUniformLocation(shader_program, "view");
   proj_location = glGetUniformLocation(shader_program, "projection");
   normal_to_world_location = glGetUniformLocation(shader_program, "normal_to_world");
   
-  view_pos_location = glGetUniformLocation(shader_program, "viewPos");
+  view_pos_location = glGetUniformLocation(shader_program, "view_pos");
   
-    light_pos_location = glGetUniformLocation(shader_program, "lightPos");
+    light_pos_location = glGetUniformLocation(shader_program, "light.position");
   light_ambient_location = glGetUniformLocation(shader_program, "light.ambient");
   light_diffuse_location = glGetUniformLocation(shader_program, "light.diffuse");
   light_specular_location = glGetUniformLocation(shader_program, "light.specular");
@@ -293,6 +297,7 @@ void render(double currentTime) {
                             glm::vec3(0.0f, 0.0f, 0.0f),  // target
                             glm::vec3(0.0f, 1.0f, 0.0f)); // up
 
+  // Parte 4 Render
   // Moving cube
   model_matrix = glm::rotate(model_matrix, f, glm::vec3(0.5f, 1.0f, 0.0f));
 
@@ -304,14 +309,13 @@ void render(double currentTime) {
   // Normal matrix: normal vectors to world coordinates
   glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(model_matrix)));
 
-  // Set uniform values
-  glm::vec3 view_pos = camera_pos;
-
+  // Valores uniformes
   glUniformMatrix4fv(model_location, 1, GL_FALSE, glm::value_ptr(model_matrix));
   glUniformMatrix4fv(view_location, 1, GL_FALSE, glm::value_ptr(view_matrix));
   glUniformMatrix4fv(proj_location, 1, GL_FALSE, glm::value_ptr(proj_matrix));
   
   glUniformMatrix3fv(normal_to_world_location, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+  glUniform3fv(view_pos_location, 1, glm::value_ptr(camera_pos));  
 
   glUniform3fv(light_pos_location, 1, glm::value_ptr(light_pos));
   glUniform3fv(light_ambient_location, 1, glm::value_ptr(light_ambient));
