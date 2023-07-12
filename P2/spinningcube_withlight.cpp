@@ -23,7 +23,7 @@ void render(double);
 GLuint shader_program = 0; // shader program to set render pipeline
 GLuint vao = 0; // Vertex Array Object to set input data
 GLint model_location, view_location, proj_location; // Uniforms for transformation matrices
-
+GLuint new_vao = 0; // Parte 2(Pirámide): Es necesario otro vao para la creación de la imágen.
 
 // Posiciones para la luz y la vista
 GLint light_pos_location, view_pos_location; 
@@ -244,8 +244,56 @@ int main() {
 
   // Unbind vao
   glBindVertexArray(0);
+  
+  // Parte 2 (Pirámide): Declaración del Vertex Array Object, la base y vertices de la pirámide nueva con su normal, y la uniforme.
+ 
+  glGenVertexArrays(1, &new_vao);
+  glBindVertexArray(new_vao);
+  
+  const GLfloat new_vertex_positions[] = {
+    // Base
+    1.0f,  0.75f, 0.0f,    0.0f, -1.0f, 0.0f,     
+    1.0f,  0.25f, 0.25f,   0.0f, -1.0f, 0.0f,     
+    0.75f, 0.25f, -0.25f,  0.0f, -1.0f, 0.0f,     
 
-  // Parte 3 Especificar las variables.
+    // Lados
+    1.0f,  0.75f, 0.0f,    0.57735f, -0.57735f, -0.57735f, 
+    0.75f, 0.25f, -0.25f,  0.57735f, -0.57735f, -0.57735f, 
+    1.25f, 0.25f, -0.25f,  0.57735f, -0.57735f, -0.57735f,  
+
+    1.0f,  0.75f, 0.0f,    0.57735f, -0.57735f, 0.57735f, 
+    1.25f, 0.25f, -0.25f,  0.57735f, -0.57735f, 0.57735f, 
+    1.0f,  0.25f, 0.25f,   0.57735f, -0.57735f, 0.57735f, 
+
+    0.75f, 0.25f, -0.25f,  -0.57735f, -0.57735f, 0.57735f,  
+    1.0f,  0.25f, 0.25f,   -0.57735f, -0.57735f, 0.57735f, 
+    1.25f, 0.25f, -0.25f,  -0.57735f, -0.57735f, 0.57735f,  
+  };
+
+  
+  // Coordenadas de los vértices de la pirámide nueva.
+  GLuint new_vbo = 0;
+  glGenBuffers(1, &new_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, new_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(new_vertex_positions), new_vertex_positions, GL_STATIC_DRAW);
+
+  // Incluír las normales en la representación.
+  // Vertex attributes
+  // 0: vertex position (x, y, z)
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), NULL);
+  glEnableVertexAttribArray(0);
+
+  // Vertex attributes
+  // 1: vertex normals (x, y, z)
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)(3 * sizeof(float)));
+  glEnableVertexAttribArray(1);
+
+  // Unbind vbo (it was conveniently registered by VertexAttribPointer)
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  // Unbind vao
+  glBindVertexArray(0);
+
   // Uniforms
   // - Model matrix
   // - View matrix
@@ -347,6 +395,12 @@ void render(double currentTime) {
   glUniform1f(material_shininess_location, material_shininess);
 
   glDrawArrays(GL_TRIANGLES, 0, 36);
+  
+  // Parte 2(Pirámide): Cargamos en escena la pirámide.
+  glBindVertexArray(new_vao);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+
+  
 }
 
 void processInput(GLFWwindow *window) {
